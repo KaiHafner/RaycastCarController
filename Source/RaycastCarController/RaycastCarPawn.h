@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -26,4 +24,36 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+private:
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* CarBody;
+
+	UPROPERTY(EditAnywhere, Category = "Suspension")
+	float SuspensionMaxLength = 100.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Suspension")
+	float SuspensionStrength = 5000.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Suspension")
+	float SuspensionDamping = 500.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float ForwardForce = 10000.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float TurnRate = 50.0f;
+
+	// Wheel positions
+	TArray<FVector> WheelOffsets;
+
+	// Input functions
+	void MoveForward(float Value);
+	void Turn(float Value);
+
+	// Current input values
+	float CurrentForwardInput;
+	float CurrentTurnInput;
+
+	// Helper function for suspension
+	void ApplySuspensionForce(FVector Start, FVector End, float DeltaTime);
 };
