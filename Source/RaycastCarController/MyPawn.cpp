@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 
 #include "MyPawn.h"
 
@@ -78,10 +76,4 @@ void AMyPawn::ApplySuspensionForce(FVector Start, FVector End, float DeltaTime)
 }
 
 
-// Called to bind functionality to input
-void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
 
