@@ -4,96 +4,104 @@
 
 ARaycastCarPawn::ARaycastCarPawn()
 {
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = true;
 
-	// Set up the car body mesh
-	CarBody = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CarBody"));
-	RootComponent = CarBody;
+    // Set up the car body mesh
+    CarBody = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CarBody"));
+    RootComponent = CarBody;
 
-	// Set up wheel offsets (relative to the car body)
-	WheelOffsets.Add(FVector(50, 150, 50));   // Front-right
-	WheelOffsets.Add(FVector(50, -150, 50));  // Front-left
-	WheelOffsets.Add(FVector(-50, 150, 50));  // Rear-right
-	WheelOffsets.Add(FVector(-50, -150, 50)); // Rear-left
+    // Initialize wheel components to nullptr
+    WheelFL = nullptr;
+    WheelFR = nullptr;
+    WheelRL = nullptr;
+    WheelRR = nullptr;
 }
 
 void ARaycastCarPawn::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
+
+    // Directly reference the existing wheel components placed in the Blueprint
+    WheelFL = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("FL_Wheel"))); // Ensure names match what you have in the Blueprint
+    WheelFR = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("FR_Wheel")));
+    WheelRL = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("RL_Wheel")));
+    WheelRR = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("RR_Wheel")));
 }
 
 void ARaycastCarPawn::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
-	// Apply movement based on input
-	FVector ForwardForceVector = CarBody->GetForwardVector() * CurrentForwardInput * ForwardForce;
-	CarBody->AddForce(ForwardForceVector);
+    // Apply movement based on input
+    FVector ForwardForceVector = CarBody->GetForwardVector() * CurrentForwardInput * ForwardForce;
+    CarBody->AddForce(ForwardForceVector);
 
-	// Apply turning
-	FRotator NewRotation = GetActorRotation();
-	NewRotation.Yaw += CurrentTurnInput * TurnRate * DeltaTime;
-	SetActorRotation(NewRotation);
+    // Apply turning
+    FRotator NewRotation = GetActorRotation();
+    NewRotation.Yaw += CurrentTurnInput * TurnRate * DeltaTime;
+    SetActorRotation(NewRotation);
 
-	// Apply suspension at each wheel
-	for (const FVector& Offset : WheelOffsets)
-	{
-		FVector Start = CarBody->GetComponentLocation() + Offset;
-		FVector End = Start - FVector(0, 0, SuspensionMaxLength);
-		ApplySuspensionForce(Start, End, DeltaTime);
-	}
+    // Apply suspension at each wheel
+    if (WheelFL && WheelFR && WheelRL && WheelRR)
+    {
+        ApplySuspensionForce(WheelFL->GetComponentLocation(), WheelFL->GetComponentLocation() - FVector(0, 0, SuspensionMaxLength), DeltaTime);
+        ApplySuspensionForce(WheelFR->GetComponentLocation(), WheelFR->GetComponentLocation() - FVector(0, 0, SuspensionMaxLength), DeltaTime);
+        ApplySuspensionForce(WheelRL->GetComponentLocation(), WheelRL->GetComponentLocation() - FVector(0, 0, SuspensionMaxLength), DeltaTime);
+        ApplySuspensionForce(WheelRR->GetComponentLocation(), WheelRR->GetComponentLocation() - FVector(0, 0, SuspensionMaxLength), DeltaTime);
+    }
 }
 
 void ARaycastCarPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Bind input functions
-	PlayerInputComponent->BindAxis("MoveForward", this, &ARaycastCarPawn::MoveForward);
-	PlayerInputComponent->BindAxis("Turn", this, &ARaycastCarPawn::Turn);
+    // Bind input functions
+    PlayerInputComponent->BindAxis("MoveForward", this, &ARaycastCarPawn::MoveForward);
+    PlayerInputComponent->BindAxis("Turn", this, &ARaycastCarPawn::Turn);
 }
 
 void ARaycastCarPawn::MoveForward(float Value)
 {
-	CurrentForwardInput = Value;
+    CurrentForwardInput = Value;
 }
 
 void ARaycastCarPawn::Turn(float Value)
 {
-	CurrentTurnInput = Value;
+    CurrentTurnInput = Value;
 }
 
 void ARaycastCarPawn::ApplySuspensionForce(FVector Start, FVector End, float DeltaTime)
 {
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
+    FHitResult HitResult;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
 
-	// Perform the raycast
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-	{
-		float DistanceToGround = (Start - HitResult.ImpactPoint).Size();
-		FString DistanceMessage = FString::Printf(TEXT("Distance to Ground: %.2f"), DistanceToGround);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, DistanceMessage);
+    // Perform the raycast
+    if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+    {
+        // Calculate the distance from the start to the impact point
+        float DistanceToGround = (Start - HitResult.ImpactPoint).Size();
 
-		float CompressionRatio = 100.0f - (DistanceToGround / SuspensionMaxLength);
+        // Check if the raycast distance is less than the maximum suspension length
+        if (DistanceToGround < SuspensionMaxLength)
+        {
+            // Normalize the distance to a value between 0 and 1
+            float NormalizedDistance = FMath::Clamp(1.0f - (DistanceToGround / SuspensionMaxLength), 0.0f, 1.0f);
 
-		// Calculate forces
-		float SpringForce = CompressionRatio * SuspensionStrength;
-		float DampingForce = SuspensionDamping * FVector::DotProduct(CarBody->GetComponentVelocity(), FVector::DownVector);
-		float TotalForce = SpringForce - DampingForce;
+            // Calculate forces based on normalized distance
+            float SpringForce = NormalizedDistance * SuspensionStrength; // Adjust the spring force according to normalized distance
+            float DampingForce = SuspensionDamping * FVector::DotProduct(CarBody->GetComponentVelocity(), FVector::DownVector);
+            float TotalForce = SpringForce - DampingForce;
 
-		float Weight = 1600.0f * 980.0f;
-		float TotalSuspensionForce = TotalForce + (Weight / 4); // Divide weight by number of wheels
+            // Apply force at the hit location
+            CarBody->AddForceAtLocation(FVector(0, 0, TotalForce), HitResult.ImpactPoint);
 
-		// Apply force at the hit location
-		CarBody->AddForceAtLocation(FVector(0, 0, TotalSuspensionForce), HitResult.ImpactPoint);
-
-		// Draw debug line
-		DrawDebugLine(GetWorld(), Start, HitResult.ImpactPoint, FColor::Green, false, -1, 0, 2);
-	}
-	else
-	{
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, -1, 0, 2);
-	}
+            // Draw debug line
+            DrawDebugLine(GetWorld(), Start, HitResult.ImpactPoint, FColor::Green, false, -1, 0, 2);
+        }
+    }
+    else
+    {
+        DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, -1, 0, 2);
+    }
 }
