@@ -34,16 +34,15 @@ private:
 	USceneComponent* WheelRR; // Rear Right Wheel
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionRest = 100;
+	float SuspensionRest = 100.0f;
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionOffset = 0.0f;
+	float SpringStrength = 30000.0f;
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SpringStrength = 100.0f;
-	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SpringDamper = 100.0f;
-
+	float SpringDamper = 3000.0f;
 	UPROPERTY(EditAnywhere, Category = "Suspension")
 	float SuspensionForce;
+	UPROPERTY(EditAnywhere, Category = "Suspension")
+	float SuspensionOffset = 0.0f; //Wheel Offset (Wheel size)
 
 	// Helper function for suspension
 	void ApplySuspensionForce(FVector Start, FVector End, float DeltaTime);
