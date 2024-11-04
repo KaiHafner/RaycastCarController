@@ -32,10 +32,10 @@ private:
 	float SuspensionMaxLength = 100.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionStrength = 5000.0f;
+	float SuspensionStrength = 10000.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionDamping = 500.0f;
+	float SuspensionDamping = 400.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float ForwardForce = 10000.0f;
