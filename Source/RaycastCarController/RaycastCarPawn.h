@@ -24,13 +24,13 @@ private:
 	UStaticMeshComponent* CarBody;
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionRest = 125.0f; //Rest length of suspension
+	float SuspensionRest = 70.0f; //Rest length of suspension
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionStiffness = 5000.0f; //Higher = stiffer suspension
+	float SuspensionStiffness = 50000.0f; //Higher = stiffer suspension
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionDamping = 500.0f; //Higher = less bounce
+	float SuspensionDamping = 1000.0f; //Higher = less bounce
 
 
 	//Declare USceneComponent pointers for existing wheel locations
@@ -44,5 +44,5 @@ private:
 	USceneComponent* WheelRR; //Rear Right Wheel
 
 	//Helper function for suspension
-	void ApplySuspensionForce(FVector Start, FVector End, float DeltaTime);
+	void ApplySuspensionForce(FVector Start, float DeltaTime);
 };

@@ -6,11 +6,11 @@ ARaycastCarPawn::ARaycastCarPawn()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    // Set up the car body mesh
+    //Set up the car body mesh
     CarBody = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CarBody"));
     RootComponent = CarBody;
 
-    // Initialize wheel components to nullptr
+    //Initialize wheel components to nullptr
     WheelFL = nullptr;
     WheelFR = nullptr;
     WheelRL = nullptr;
@@ -32,46 +32,47 @@ void ARaycastCarPawn::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (WheelFL && WheelFR && WheelRL && WheelRR)
-    {
-        ApplySuspensionForce(WheelFL->GetComponentLocation(), WheelFL->GetComponentLocation() - FVector(0, 0, SuspensionRest), DeltaTime);
-        ApplySuspensionForce(WheelFR->GetComponentLocation(), WheelFR->GetComponentLocation() - FVector(0, 0, SuspensionRest), DeltaTime);
-        ApplySuspensionForce(WheelRL->GetComponentLocation(), WheelRL->GetComponentLocation() - FVector(0, 0, SuspensionRest), DeltaTime);
-        ApplySuspensionForce(WheelRR->GetComponentLocation(), WheelRR->GetComponentLocation() - FVector(0, 0, SuspensionRest), DeltaTime);
-    }
+    ApplySuspensionForce(WheelFL->GetComponentLocation(), DeltaTime);
+    ApplySuspensionForce(WheelFR->GetComponentLocation(), DeltaTime);
+    ApplySuspensionForce(WheelRL->GetComponentLocation(), DeltaTime);
+    ApplySuspensionForce(WheelRR->GetComponentLocation(), DeltaTime);
 }
 
 
-void ARaycastCarPawn::ApplySuspensionForce(FVector WheelLocation, FVector RayEnd, float DeltaTime)
+void ARaycastCarPawn::ApplySuspensionForce(FVector WheelLocation, float DeltaTime)
 {
     FHitResult HitResult;
     FCollisionQueryParams QueryParams;
-    QueryParams.AddIgnoredActor(this);  //Ignore the car itself
+    QueryParams.AddIgnoredActor(this); //Ignore the car itself
+
+    FVector RayStart = WheelLocation;
+    FVector RayEnd = RayStart - FVector(0, 0, SuspensionRest); //Always cast straight down in world space
 
     //Perform raycast
-    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, WheelLocation, RayEnd, ECC_Visibility, QueryParams);
+    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, RayStart, RayEnd, ECC_Visibility, QueryParams);
 
     if (bHit)
     {
-        float Compression = SuspensionRest - HitResult.Distance; //How much suspension is compressed
+        float Compression = SuspensionRest - HitResult.Distance; //Suspension compression
         float SpringForce = SuspensionStiffness * Compression; //hookes Law
-        float Velocity = FVector::DotProduct(GetVelocity(), FVector(0, 0, 1)); //Velocity in Z
+        float Velocity = FVector::DotProduct(GetVelocity(), FVector(0, 0, 1)); //Vertical velocity only
         float DampingForce = SuspensionDamping * Velocity;
 
-        FVector Force = FVector(0, 0, SpringForce - DampingForce); //Net force
+        FVector Force = FVector(0, 0, SpringForce - DampingForce); //apply force only upwards
 
         CarBody->AddForceAtLocation(Force, WheelLocation);
 
-        //Debug draw
-        DrawDebugLine(GetWorld(), WheelLocation, HitResult.Location, FColor::Green, false, 0.1f, 0, 2);
+        //Debug draw - Raycast
+        DrawDebugLine(GetWorld(), RayStart, HitResult.Location, FColor::Green, false, 0.1f, 0, 2);
         DrawDebugPoint(GetWorld(), HitResult.Location, 5, FColor::Red, false, 0.1f);
 
-        DrawDebugDirectionalArrow(GetWorld(), WheelLocation, WheelLocation + (Force * 0.001f), 100.0f, FColor::Blue, false, 0.1f, 0, 4.0f);
+        //Debug arrow showing force direction
+        DrawDebugDirectionalArrow(GetWorld(), WheelLocation, WheelLocation + (Force * 0.001f), 100.0f, FColor::Blue, false, 0.1f, 0, 2.0f);
     }
     else
     {
-        //Debug: If no ground hit, draw a failed line in red
-        DrawDebugLine(GetWorld(), WheelLocation, RayEnd, FColor::Red, false, 0.1f, 0, 2);
+        //draw a failed line in red
+        DrawDebugLine(GetWorld(), RayStart, RayEnd, FColor::Red, false, 0.1f, 0, 2);
     }
 }
 
