@@ -53,6 +53,8 @@ void ARaycastCarPawn::ApplySuspensionForce(FVector WheelLocation, float DeltaTim
 
     if (bHit)
     {
+        isGrounded = true;
+
         float Compression = SuspensionRest - HitResult.Distance; //Suspension compression
         float SpringForce = SuspensionStiffness * Compression; //hookes Law
         float Velocity = FVector::DotProduct(GetVelocity(), FVector(0, 0, 1)); //Vertical velocity only
@@ -67,10 +69,11 @@ void ARaycastCarPawn::ApplySuspensionForce(FVector WheelLocation, float DeltaTim
         DrawDebugPoint(GetWorld(), HitResult.Location, 5, FColor::Red, false, 0.1f);
 
         //Debug arrow showing force direction
-        DrawDebugDirectionalArrow(GetWorld(), WheelLocation, WheelLocation + (Force * 0.001f), 100.0f, FColor::Blue, false, 0.1f, 0, 2.0f);
+        DrawDebugDirectionalArrow(GetWorld(), WheelLocation, WheelLocation + (Force * 0.001f), 100.0f, FColor::Blue, false, 0.1f, 0, 3.0f);
     }
     else
     {
+        isGrounded = false;
         //draw a failed line in red
         DrawDebugLine(GetWorld(), RayStart, RayEnd, FColor::Red, false, 0.1f, 0, 2);
     }

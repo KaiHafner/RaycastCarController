@@ -23,6 +23,7 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* CarBody;
 
+	//Suspension
 	UPROPERTY(EditAnywhere, Category = "Suspension")
 	float SuspensionRest = 70.0f; //Rest length of suspension
 
@@ -32,8 +33,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Suspension")
 	float SuspensionDamping = 1000.0f; //Higher = less bounce
 
-
-	//Declare USceneComponent pointers for existing wheel locations
+	//Wheels
 	UPROPERTY(VisibleAnywhere, Category = "Locations")
 	USceneComponent* WheelFL; //Front Left Wheel
 	UPROPERTY(VisibleAnywhere, Category = "Locations")
@@ -42,6 +42,10 @@ private:
 	USceneComponent* WheelRL; //Rear Left Wheel
 	UPROPERTY(VisibleAnywhere, Category = "Locations")
 	USceneComponent* WheelRR; //Rear Right Wheel
+
+	UPROPERTY(VisibleAnywhere, Category = "Grounded")
+	bool isGrounded;
+
 
 	//Helper function for suspension
 	void ApplySuspensionForce(FVector Start, float DeltaTime);
