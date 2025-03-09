@@ -22,7 +22,7 @@ void ARaycastCarPawn::BeginPlay()
     Super::BeginPlay();
 
     // Directly reference the existing wheel components placed in the Blueprint
-    WheelFL = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("FL_Wheel"))); // Ensure names match what you have in the Blueprint
+    WheelFL = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("FL_Wheel")));
     WheelFR = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("FR_Wheel")));
     WheelRL = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("RL_Wheel")));
     WheelRR = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("RR_Wheel")));
@@ -32,7 +32,6 @@ void ARaycastCarPawn::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Apply suspension at each wheel
     if (WheelFL && WheelFR && WheelRL && WheelRR)
     {
         ApplySuspensionForce(WheelFL->GetComponentLocation(), WheelFL->GetComponentLocation() - FVector(0, 0, SuspensionRest), DeltaTime);
@@ -43,33 +42,36 @@ void ARaycastCarPawn::Tick(float DeltaTime)
 }
 
 
-void ARaycastCarPawn::ApplySuspensionForce(FVector Start, FVector End, float DeltaTime)
+void ARaycastCarPawn::ApplySuspensionForce(FVector WheelLocation, FVector RayEnd, float DeltaTime)
 {
     FHitResult HitResult;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
+    FCollisionQueryParams QueryParams;
+    QueryParams.AddIgnoredActor(this);  //Ignore the car itself
 
-    // Perform the raycast
-    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+    //Perform raycast
+    bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, WheelLocation, RayEnd, ECC_Visibility, QueryParams);
 
     if (bHit)
     {
-        FVector Velocity = CarBody->GetComponentVelocity();
+        float Compression = SuspensionRest - HitResult.Distance; //How much suspension is compressed
+        float SpringForce = SuspensionStiffness * Compression; //hookes Law
+        float Velocity = FVector::DotProduct(GetVelocity(), FVector(0, 0, 1)); //Velocity in Z
+        float DampingForce = SuspensionDamping * Velocity;
 
-        // Calculate the suspension force only if the ray hits something
-        float DistanceToGround = (Start - HitResult.ImpactPoint).Size();
-        SuspensionOffset = SuspensionRest - DistanceToGround;
-        SuspensionForce = (SuspensionOffset * SpringStrength) - (SpringDamper * Velocity.Z);
+        FVector Force = FVector(0, 0, SpringForce - DampingForce); //Net force
 
-        CarBody->AddForceAtLocation(FVector(0, 0, SuspensionForce), HitResult.ImpactPoint);
+        CarBody->AddForceAtLocation(Force, WheelLocation);
 
-        // Draw a green debug line to indicate a successful hit
-        DrawDebugLine(GetWorld(), Start, HitResult.ImpactPoint, FColor::Green, false, -1, 0, 2);
+        //Debug draw
+        DrawDebugLine(GetWorld(), WheelLocation, HitResult.Location, FColor::Green, false, 0.1f, 0, 2);
+        DrawDebugPoint(GetWorld(), HitResult.Location, 5, FColor::Red, false, 0.1f);
+
+        DrawDebugDirectionalArrow(GetWorld(), WheelLocation, WheelLocation + (Force * 0.01f), 100.0f, FColor::Blue, false, 0.1f, 0, 4.0f);
     }
     else
     {
-        // Draw a red debug line to indicate a miss
-        DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, -1, 0, 2);
+        //Debug: If no ground hit, draw a failed line in red
+        DrawDebugLine(GetWorld(), WheelLocation, RayEnd, FColor::Red, false, 0.1f, 0, 2);
     }
 }
 

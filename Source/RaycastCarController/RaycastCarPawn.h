@@ -23,27 +23,26 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* CarBody;
 
-	// Declare USceneComponent pointers for existing wheel locations
-	UPROPERTY(VisibleAnywhere, Category = "Locations")
-	USceneComponent* WheelFL; // Front Left Wheel
-	UPROPERTY(VisibleAnywhere, Category = "Locations")
-	USceneComponent* WheelFR; // Front Right Wheel
-	UPROPERTY(VisibleAnywhere, Category = "Locations")
-	USceneComponent* WheelRL; // Rear Left Wheel
-	UPROPERTY(VisibleAnywhere, Category = "Locations")
-	USceneComponent* WheelRR; // Rear Right Wheel
+	UPROPERTY(EditAnywhere, Category = "Suspension")
+	float SuspensionRest = 100.0f; //Rest length of suspension
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionRest = 100.0f;
-	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SpringStrength = 30000.0f;
-	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SpringDamper = 3000.0f;
-	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionForce;
-	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionOffset = 0.0f; //Wheel Offset (Wheel size)
+	float SuspensionStiffness = 5000.0f; //Higher = stiffer suspension
 
-	// Helper function for suspension
+	UPROPERTY(EditAnywhere, Category = "Suspension")
+	float SuspensionDamping = 500.0f; //Higher = less bounce
+
+
+	//Declare USceneComponent pointers for existing wheel locations
+	UPROPERTY(VisibleAnywhere, Category = "Locations")
+	USceneComponent* WheelFL; //Front Left Wheel
+	UPROPERTY(VisibleAnywhere, Category = "Locations")
+	USceneComponent* WheelFR; //Front Right Wheel
+	UPROPERTY(VisibleAnywhere, Category = "Locations")
+	USceneComponent* WheelRL; //Rear Left Wheel
+	UPROPERTY(VisibleAnywhere, Category = "Locations")
+	USceneComponent* WheelRR; //Rear Right Wheel
+
+	//Helper function for suspension
 	void ApplySuspensionForce(FVector Start, FVector End, float DeltaTime);
 };
