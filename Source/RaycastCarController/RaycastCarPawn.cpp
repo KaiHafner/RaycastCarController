@@ -21,7 +21,7 @@ void ARaycastCarPawn::BeginPlay()
 {
     Super::BeginPlay();
 
-    // Directly reference the existing wheel components placed in the Blueprint
+    //Directly reference the existing wheel components placed in the Blueprint
     WheelFL = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("FL_Wheel")));
     WheelFR = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("FR_Wheel")));
     WheelRL = Cast<USceneComponent>(GetDefaultSubobjectByName(TEXT("RL_Wheel")));
@@ -66,7 +66,7 @@ void ARaycastCarPawn::ApplySuspensionForce(FVector WheelLocation, FVector RayEnd
         DrawDebugLine(GetWorld(), WheelLocation, HitResult.Location, FColor::Green, false, 0.1f, 0, 2);
         DrawDebugPoint(GetWorld(), HitResult.Location, 5, FColor::Red, false, 0.1f);
 
-        DrawDebugDirectionalArrow(GetWorld(), WheelLocation, WheelLocation + (Force * 0.01f), 100.0f, FColor::Blue, false, 0.1f, 0, 4.0f);
+        DrawDebugDirectionalArrow(GetWorld(), WheelLocation, WheelLocation + (Force * 0.001f), 100.0f, FColor::Blue, false, 0.1f, 0, 4.0f);
     }
     else
     {

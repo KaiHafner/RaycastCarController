@@ -24,7 +24,7 @@ private:
 	UStaticMeshComponent* CarBody;
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
-	float SuspensionRest = 100.0f; //Rest length of suspension
+	float SuspensionRest = 125.0f; //Rest length of suspension
 
 	UPROPERTY(EditAnywhere, Category = "Suspension")
 	float SuspensionStiffness = 5000.0f; //Higher = stiffer suspension
